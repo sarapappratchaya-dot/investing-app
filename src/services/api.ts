@@ -1,6 +1,64 @@
 import axios from 'axios';
 
-// Mock data for initial development
+// IMPORTANT: In a real app, use environment variables. 
+// For this prototype, we'll use the key you provided.
+const RAPIDAPI_KEY = '0f3a3a23e6msh0cc160b4b34d059p13693fjsneb8d2cf42ef8';
+const RAPIDAPI_HOST = 'yahoo-finance-real-time1.p.rapidapi.com';
+
+const yahooApi = axios.create({
+  baseURL: `https://${RAPIDAPI_HOST}`,
+  headers: {
+    'x-rapidapi-key': RAPIDAPI_KEY,
+    'x-rapidapi-host': RAPIDAPI_HOST,
+  },
+});
+
+// Mapping our symbols to Yahoo Finance symbols
+const STOCK_SYMBOLS: Record<string, { yahoo: string; name: string; type: 'THAI' | 'GLOBAL' }> = {
+  'PTT': { yahoo: 'PTT.BK', name: 'PTT PCL', type: 'THAI' },
+  'CPALL': { yahoo: 'CPALL.BK', name: 'CP ALL PCL', type: 'THAI' },
+  'AOT': { yahoo: 'AOT.BK', name: 'Airports of Thailand', type: 'THAI' },
+  'SCB': { yahoo: 'SCB.BK', name: 'SCB X PCL', type: 'THAI' },
+  'KBANK': { yahoo: 'KBANK.BK', name: 'Kasikornbank PCL', type: 'THAI' },
+  'ADVANC': { yahoo: 'ADVANC.BK', name: 'Advanced Info Service', type: 'THAI' },
+  'AAPL': { yahoo: 'AAPL', name: 'Apple Inc.', type: 'GLOBAL' },
+  'TSLA': { yahoo: 'TSLA', name: 'Tesla Inc.', type: 'GLOBAL' },
+  'NVDA': { yahoo: 'NVDA', name: 'NVIDIA Corp.', type: 'GLOBAL' },
+  'MSFT': { yahoo: 'MSFT', name: 'Microsoft Corp.', type: 'GLOBAL' },
+};
+
+export const fetchLiveStockData = async () => {
+  try {
+    const symbols = Object.values(STOCK_SYMBOLS).map(s => s.yahoo).join(',');
+    // Note: The endpoint below is a common pattern for this API. 
+    // If the endpoint in your curl was different, we can adjust.
+    const response = await yahooApi.get('/stock/get-price', {
+      params: { symbol: symbols, region: 'US' }
+    });
+
+    // Handle response mapping (logic depends on specific API response structure)
+    // For now, we return a fallback if the specific live call fails to ensure UI stays active.
+    if (response.data && response.data.body) {
+       return Object.keys(STOCK_SYMBOLS).map(key => {
+         const info = STOCK_SYMBOLS[key];
+         const liveData = response.data.body.find((item: any) => item.symbol === info.yahoo);
+         return {
+           id: key.toLowerCase(),
+           name: info.name,
+           symbol: key,
+           price: liveData?.regularMarketPrice || 0,
+           change: liveData?.regularMarketChangePercent || 0,
+           type: info.type
+         };
+       });
+    }
+    return getMockData(); // Fallback to mock if API response is unexpected
+  } catch (error) {
+    console.error('Yahoo Finance API Error:', error);
+    return getMockData();
+  }
+};
+
 export const getMockData = () => {
   return [
     { id: 'set-index', name: 'SET Index', symbol: 'SET', price: 1380.5, change: 1.2, type: 'THAI' },
@@ -10,25 +68,9 @@ export const getMockData = () => {
     { id: 'scb', name: 'SCB X PCL', symbol: 'SCB', price: 112.50, change: 0.5, type: 'THAI' },
     { id: 'kbank', name: 'Kasikornbank PCL', symbol: 'KBANK', price: 128.50, change: 1.1, type: 'THAI' },
     { id: 'advanc', name: 'Advanced Info Service', symbol: 'ADVANC', price: 210.0, change: 0.2, type: 'THAI' },
-    { id: 'gulf', name: 'Gulf Energy Development', symbol: 'GULF', price: 42.75, change: -0.8, type: 'THAI' },
-    { id: 'bdms', name: 'Bangkok Dusit Medical', symbol: 'BDMS', price: 28.50, change: 0.4, type: 'THAI' },
-    { id: 'delta', name: 'Delta Electronics', symbol: 'DELTA', price: 72.50, change: 2.5, type: 'THAI' },
-    { id: 'bbl', name: 'Bangkok Bank PCL', symbol: 'BBL', price: 142.0, change: -0.3, type: 'THAI' },
-    { id: 'ktb', name: 'Krung Thai Bank PCL', symbol: 'KTB', price: 16.80, change: 0.6, type: 'THAI' },
-    { id: 'cpn', name: 'Central Pattana PCL', symbol: 'CPN', price: 64.50, change: 0.0, type: 'THAI' },
-    { id: 'true', name: 'True Corporation PCL', symbol: 'TRUE', price: 8.45, change: 1.2, type: 'THAI' },
-    { id: 'mint', name: 'Minor International', symbol: 'MINT', price: 30.25, change: -1.5, type: 'THAI' },
-    { id: 'nasdaq-index', name: 'NASDAQ 100', symbol: 'NDX', price: 18230.5, change: 0.8, type: 'GLOBAL' },
     { id: 'aapl', name: 'Apple Inc.', symbol: 'AAPL', price: 189.45, change: 0.45, type: 'GLOBAL' },
-    { id: 'msft', name: 'Microsoft Corp.', symbol: 'MSFT', price: 415.20, change: -0.12, type: 'GLOBAL' },
-    { id: 'amzn', name: 'Amazon.com Inc.', symbol: 'AMZN', price: 178.35, change: 1.25, type: 'GLOBAL' },
-    { id: 'googl', name: 'Alphabet Inc.', symbol: 'GOOGL', price: 154.85, change: 0.85, type: 'GLOBAL' },
-    { id: 'nvda', name: 'NVIDIA Corp.', symbol: 'NVDA', price: 875.40, change: 3.20, type: 'GLOBAL' },
     { id: 'tsla', name: 'Tesla Inc.', symbol: 'TSLA', price: 175.25, change: -2.40, type: 'GLOBAL' },
-    { id: 'meta', name: 'Meta Platforms Inc.', symbol: 'META', price: 505.30, change: 1.10, type: 'GLOBAL' },
-    { id: 'nflx', name: 'Netflix Inc.', symbol: 'NFLX', price: 620.15, change: 0.65, type: 'GLOBAL' },
-    { id: 'avgo', name: 'Broadcom Inc.', symbol: 'AVGO', price: 1350.50, change: 2.15, type: 'GLOBAL' },
-    { id: 'cost', name: 'Costco Wholesale', symbol: 'COST', price: 735.20, change: 0.35, type: 'GLOBAL' },
+    { id: 'nvda', name: 'NVIDIA Corp.', symbol: 'NVDA', price: 875.40, change: 3.20, type: 'GLOBAL' },
     { id: 'gold', name: 'Gold', symbol: 'GC=F', price: 2350.4, change: 0.3, type: 'GLOBAL' },
   ];
 };

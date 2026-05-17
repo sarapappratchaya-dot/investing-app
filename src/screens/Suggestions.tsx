@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { TradeCard } from '../components/TradeCard';
-import { fetchCryptoTop50, getMockData } from '../services/api';
+import { fetchCryptoTop50, fetchLiveStockData } from '../services/api';
 import { getTopSuggestions, TradeSuggestion } from '../utils/tradingLogic';
 import { Zap, ArrowUpDown, Percent, Info } from 'lucide-react-native';
 
@@ -15,9 +15,9 @@ export default function Suggestions() {
 
   const loadData = async () => {
     setLoading(true);
-    const mock = getMockData();
+    const stocks = await fetchLiveStockData();
     const crypto = await fetchCryptoTop50();
-    const allAssets = [...mock, ...crypto];
+    const allAssets = [...stocks, ...crypto];
     const tradeSuggestions = getTopSuggestions(allAssets);
     setSuggestions(tradeSuggestions);
     setLoading(false);

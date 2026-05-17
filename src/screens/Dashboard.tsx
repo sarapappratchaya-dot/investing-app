@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { PriceCard } from '../components/PriceCard';
-import { fetchCryptoTop50, getMockData } from '../services/api';
+import { fetchCryptoTop50, fetchLiveStockData } from '../services/api';
 import { Wallet, TrendingUp, Globe, Coins } from 'lucide-react-native';
 
 const CATEGORIES = [
@@ -19,9 +19,9 @@ export default function Dashboard() {
 
   const loadData = async () => {
     setLoading(true);
-    const mock = getMockData();
+    const stocks = await fetchLiveStockData();
     const crypto = await fetchCryptoTop50();
-    setData([...mock, ...crypto]);
+    setData([...stocks, ...crypto]);
     setLoading(false);
   };
 
