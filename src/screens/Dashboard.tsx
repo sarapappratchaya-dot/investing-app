@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { PriceCard } from '../components/PriceCard';
-import { fetchCryptoTop50, fetchLiveStockData } from '../services/api';
+import { fetchCryptoTop50, fetchLiveMarketData } from '../services/api';
 import { Wallet, TrendingUp, Globe, Coins } from 'lucide-react-native';
 
 const CATEGORIES = [
@@ -19,9 +19,14 @@ export default function Dashboard() {
 
   const loadData = async () => {
     setLoading(true);
-    const stocks = await fetchLiveStockData();
-    const crypto = await fetchCryptoTop50();
-    setData([...stocks, ...crypto]);
+    try {
+      const thaiStocks = await fetchLiveMarketData('THAI');
+      const globalStocks = await fetchLiveMarketData('GLOBAL');
+      const crypto = await fetchCryptoTop50();
+      setData([...thaiStocks, ...globalStocks, ...crypto]);
+    } catch (error) {
+      console.error('Dashboard loading error:', error);
+    }
     setLoading(false);
   };
 
@@ -43,7 +48,7 @@ export default function Dashboard() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Investing</Text>
-        <Text style={styles.subtitle}>Market Overview</Text>
+        <Text style={styles.subtitle}>Market Scan (SET100 & NASDAQ)</Text>
       </View>
 
       <View style={styles.categories}>

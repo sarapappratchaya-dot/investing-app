@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { TradeCard } from '../components/TradeCard';
-import { fetchCryptoTop50, fetchLiveStockData } from '../services/api';
+import { fetchCryptoTop50, fetchLiveMarketData } from '../services/api';
 import { getTopSuggestions, TradeSuggestion } from '../utils/tradingLogic';
 import { Zap, ArrowUpDown, Percent, Info } from 'lucide-react-native';
 
@@ -15,11 +15,17 @@ export default function Suggestions() {
 
   const loadData = async () => {
     setLoading(true);
-    const stocks = await fetchLiveStockData();
-    const crypto = await fetchCryptoTop50();
-    const allAssets = [...stocks, ...crypto];
-    const tradeSuggestions = getTopSuggestions(allAssets);
-    setSuggestions(tradeSuggestions);
+    try {
+      const thaiStocks = await fetchLiveMarketData('THAI');
+      const globalStocks = await fetchLiveMarketData('GLOBAL');
+      const crypto = await fetchCryptoTop50();
+      
+      const allAssets = [...thaiStocks, ...globalStocks, ...crypto];
+      const tradeSuggestions = getTopSuggestions(allAssets);
+      setSuggestions(tradeSuggestions);
+    } catch (error) {
+      console.error('Suggestions loading error:', error);
+    }
     setLoading(false);
   };
 
@@ -36,7 +42,7 @@ export default function Suggestions() {
   const sortedSuggestions = [...suggestions].sort((a, b) => {
     if (sortBy === 'SCORE') return b.score - a.score;
     if (sortBy === 'RR') return b.rr - a.rr;
-    if (sortBy === 'RSI') return a.rsi - b.rsi; // Lower RSI is better for buying
+    if (sortBy === 'RSI') return a.rsi - b.rsi;
     return 0;
   });
 
@@ -44,10 +50,10 @@ export default function Suggestions() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>Day Trade Suggestions</Text>
+          <Text style={styles.title}>Day Trade Scanner</Text>
           <Zap size={24} color="#FFD600" fill="#FFD600" />
         </View>
-        <Text style={styles.subtitle}>Daily setups for beginners</Text>
+        <Text style={styles.subtitle}>Scanning SET100 & NASDAQ for setups</Text>
       </View>
 
       <View style={styles.sortBar}>
@@ -91,7 +97,7 @@ export default function Suggestions() {
             <View style={styles.banner}>
               <Info size={16} color="#0288D1" />
               <Text style={styles.bannerText}>
-                Always use a Stop Loss. These suggestions are based on 15m/1H technical indicators.
+                Scanner analyzed 100+ stocks. Here are the top setups based on Volume, RSI, and R/R logic.
               </Text>
             </View>
           }
