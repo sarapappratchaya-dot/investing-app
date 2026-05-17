@@ -18,7 +18,17 @@ export const getMockData = () => {
     { id: 'cpn', name: 'Central Pattana PCL', symbol: 'CPN', price: 64.50, change: 0.0, type: 'THAI' },
     { id: 'true', name: 'True Corporation PCL', symbol: 'TRUE', price: 8.45, change: 1.2, type: 'THAI' },
     { id: 'mint', name: 'Minor International', symbol: 'MINT', price: 30.25, change: -1.5, type: 'THAI' },
-    { id: 'nasdaq', name: 'NASDAQ 100', symbol: 'NDX', price: 18230.5, change: 0.8, type: 'GLOBAL' },
+    { id: 'nasdaq-index', name: 'NASDAQ 100', symbol: 'NDX', price: 18230.5, change: 0.8, type: 'GLOBAL' },
+    { id: 'aapl', name: 'Apple Inc.', symbol: 'AAPL', price: 189.45, change: 0.45, type: 'GLOBAL' },
+    { id: 'msft', name: 'Microsoft Corp.', symbol: 'MSFT', price: 415.20, change: -0.12, type: 'GLOBAL' },
+    { id: 'amzn', name: 'Amazon.com Inc.', symbol: 'AMZN', price: 178.35, change: 1.25, type: 'GLOBAL' },
+    { id: 'googl', name: 'Alphabet Inc.', symbol: 'GOOGL', price: 154.85, change: 0.85, type: 'GLOBAL' },
+    { id: 'nvda', name: 'NVIDIA Corp.', symbol: 'NVDA', price: 875.40, change: 3.20, type: 'GLOBAL' },
+    { id: 'tsla', name: 'Tesla Inc.', symbol: 'TSLA', price: 175.25, change: -2.40, type: 'GLOBAL' },
+    { id: 'meta', name: 'Meta Platforms Inc.', symbol: 'META', price: 505.30, change: 1.10, type: 'GLOBAL' },
+    { id: 'nflx', name: 'Netflix Inc.', symbol: 'NFLX', price: 620.15, change: 0.65, type: 'GLOBAL' },
+    { id: 'avgo', name: 'Broadcom Inc.', symbol: 'AVGO', price: 1350.50, change: 2.15, type: 'GLOBAL' },
+    { id: 'cost', name: 'Costco Wholesale', symbol: 'COST', price: 735.20, change: 0.35, type: 'GLOBAL' },
     { id: 'gold', name: 'Gold', symbol: 'GC=F', price: 2350.4, change: 0.3, type: 'GLOBAL' },
   ];
 };
