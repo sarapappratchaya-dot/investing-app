@@ -3,11 +3,20 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Activ
 import { TradeCard } from '../components/TradeCard';
 import { fetchCryptoTop50, fetchLiveMarketData } from '../services/api';
 import { getTopSuggestions, TradeSuggestion } from '../utils/tradingLogic';
-import { Zap, ArrowUpDown, Percent, Info } from 'lucide-react-native';
+import { Zap, ArrowUpDown, Percent, Info, Wallet, TrendingUp, Globe, Coins } from 'lucide-react-native';
 
 type SortType = 'SCORE' | 'RR' | 'RSI';
 
+const CATEGORIES = [
+  { id: 'ALL', label: 'All', icon: Wallet },
+  { id: 'SET', label: 'SET', icon: TrendingUp },
+  { id: 'NASDAQ', label: 'NASDAQ', icon: Globe },
+  { id: 'CRYPTO', label: 'Crypto', icon: Coins },
+  { id: 'GOLD', label: 'Gold', icon: Zap },
+];
+
 export default function Suggestions() {
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [suggestions, setSuggestions] = useState<TradeSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -16,11 +25,12 @@ export default function Suggestions() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const thaiStocks = await fetchLiveMarketData('THAI');
-      const globalStocks = await fetchLiveMarketData('GLOBAL');
+      const setStocks = await fetchLiveMarketData('SET');
+      const nasdaqStocks = await fetchLiveMarketData('NASDAQ');
+      const gold = await fetchLiveMarketData('GOLD');
       const crypto = await fetchCryptoTop50();
       
-      const allAssets = [...thaiStocks, ...globalStocks, ...crypto];
+      const allAssets = [...setStocks, ...nasdaqStocks, ...gold, ...crypto];
       const tradeSuggestions = getTopSuggestions(allAssets);
       setSuggestions(tradeSuggestions);
     } catch (error) {
@@ -39,7 +49,11 @@ export default function Suggestions() {
     loadData();
   }, []);
 
-  const sortedSuggestions = [...suggestions].sort((a, b) => {
+  const filteredSuggestions = selectedCategory === 'ALL' 
+    ? suggestions 
+    : suggestions.filter(item => item.type === selectedCategory);
+
+  const sortedSuggestions = [...filteredSuggestions].sort((a, b) => {
     if (sortBy === 'SCORE') return b.score - a.score;
     if (sortBy === 'RR') return b.rr - a.rr;
     if (sortBy === 'RSI') return a.rsi - b.rsi;
@@ -53,7 +67,37 @@ export default function Suggestions() {
           <Text style={styles.title}>Day Trade Scanner</Text>
           <Zap size={24} color="#FFD600" fill="#FFD600" />
         </View>
-        <Text style={styles.subtitle}>Scanning SET100 & NASDAQ for setups</Text>
+        <Text style={styles.subtitle}>Scanning SET, NASDAQ, Crypto & Gold</Text>
+      </View>
+
+      <View style={styles.categories}>
+        <FlatList
+          data={CATEGORIES}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.categoryItem,
+                selectedCategory === item.id && styles.categoryItemSelected
+              ]}
+              onPress={() => setSelectedCategory(item.id)}
+            >
+              <item.icon 
+                size={14} 
+                color={selectedCategory === item.id ? '#fff' : '#757575'} 
+              />
+              <Text style={[
+                styles.categoryLabel,
+                selectedCategory === item.id && styles.categoryLabelSelected
+              ]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={styles.categoriesList}
+        />
       </View>
 
       <View style={styles.sortBar}>
@@ -97,7 +141,7 @@ export default function Suggestions() {
             <View style={styles.banner}>
               <Info size={16} color="#0288D1" />
               <Text style={styles.bannerText}>
-                Scanner analyzed 100+ stocks. Here are the top setups based on Volume, RSI, and R/R logic.
+                Top setups for {selectedCategory === 'ALL' ? 'all markets' : selectedCategory} based on 15m/1H logic.
               </Text>
             </View>
           }
@@ -130,6 +174,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#757575',
     marginTop: 4,
+  },
+  categories: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  categoriesList: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  categoryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    backgroundColor: '#F5F5F5',
+  },
+  categoryItemSelected: {
+    backgroundColor: '#2196F3',
+  },
+  categoryLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#757575',
+    marginLeft: 6,
+  },
+  categoryLabelSelected: {
+    color: '#fff',
   },
   sortBar: {
     flexDirection: 'row',

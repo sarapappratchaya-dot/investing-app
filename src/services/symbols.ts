@@ -18,5 +18,8 @@ export const FULL_SCAN_LIST = {
     'AMAT', 'HON', 'QCOM', 'ISRG', 'SBUX', 'VRTX', 'BKNG', 'ADP', 'GILD', 'MDLZ',
     'REGN', 'ADI', 'LRCX', 'PANW', 'MU', 'MELI', 'SNPS', 'KLAC', 'CDNS', 'ORLY',
     'MAR', 'CSX', 'ASML', 'PYPL', 'NXPI', 'MNST', 'CTAS', 'PDD', 'LULU', 'ADSK'
+  ],
+  GOLD: [
+    'GC=F', 'SI=F', 'PA=F'
   ]
 };

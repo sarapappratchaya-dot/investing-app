@@ -12,21 +12,22 @@ const yahooApi = axios.create({
   },
 });
 
-export const fetchLiveMarketData = async (type: 'THAI' | 'GLOBAL') => {
+export const fetchLiveMarketData = async (type: 'SET' | 'NASDAQ' | 'GOLD') => {
   try {
-    const symbols = type === 'THAI' ? FULL_SCAN_LIST.THAI : FULL_SCAN_LIST.NASDAQ;
+    let symbols: string[] = [];
+    if (type === 'SET') symbols = FULL_SCAN_LIST.THAI;
+    else if (type === 'NASDAQ') symbols = FULL_SCAN_LIST.NASDAQ;
+    else if (type === 'GOLD') symbols = FULL_SCAN_LIST.GOLD;
     
-    // Yahoo Finance Real Time API can handle multiple symbols
-    // We'll chunk them into 10 at a time to stay safe with URL lengths and processing
     const chunkSize = 10;
     const chunks = [];
     for (let i = 0; i < symbols.length; i += chunkSize) {
       chunks.push(symbols.slice(i, i + chunkSize));
     }
 
-    // For the prototype/free tier, we'll scan the first 2 chunks (20 stocks) 
-    // to find the best volume/patterns without hitting the 500/mo limit too fast.
-    const scanChunks = chunks.slice(0, 3); 
+    // Scan a limited amount to stay within free tier
+    const scanLimit = type === 'GOLD' ? 1 : 3;
+    const scanChunks = chunks.slice(0, scanLimit); 
     
     const results = await Promise.all(scanChunks.map(chunk => 
       yahooApi.get('/stock/get-price', {

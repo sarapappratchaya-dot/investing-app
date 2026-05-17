@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { PriceCard } from '../components/PriceCard';
 import { fetchCryptoTop50, fetchLiveMarketData } from '../services/api';
-import { Wallet, TrendingUp, Globe, Coins } from 'lucide-react-native';
+import { Wallet, TrendingUp, Globe, Coins, Zap } from 'lucide-react-native';
 
 const CATEGORIES = [
   { id: 'ALL', label: 'All', icon: Wallet },
-  { id: 'THAI', label: 'Thai Stock', icon: TrendingUp },
+  { id: 'SET', label: 'SET', icon: TrendingUp },
+  { id: 'NASDAQ', label: 'NASDAQ', icon: Globe },
   { id: 'CRYPTO', label: 'Crypto', icon: Coins },
-  { id: 'GLOBAL', label: 'Global', icon: Globe },
+  { id: 'GOLD', label: 'Gold', icon: Zap },
 ];
 
 export default function Dashboard() {
@@ -20,10 +21,11 @@ export default function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const thaiStocks = await fetchLiveMarketData('THAI');
-      const globalStocks = await fetchLiveMarketData('GLOBAL');
+      const setStocks = await fetchLiveMarketData('SET');
+      const nasdaqStocks = await fetchLiveMarketData('NASDAQ');
+      const gold = await fetchLiveMarketData('GOLD');
       const crypto = await fetchCryptoTop50();
-      setData([...thaiStocks, ...globalStocks, ...crypto]);
+      setData([...setStocks, ...nasdaqStocks, ...gold, ...crypto]);
     } catch (error) {
       console.error('Dashboard loading error:', error);
     }
@@ -48,31 +50,37 @@ export default function Dashboard() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Investing</Text>
-        <Text style={styles.subtitle}>Market Scan (SET100 & NASDAQ)</Text>
+        <Text style={styles.subtitle}>Market Overview</Text>
       </View>
 
       <View style={styles.categories}>
-        {CATEGORIES.map(cat => (
-          <TouchableOpacity
-            key={cat.id}
-            style={[
-              styles.categoryItem,
-              selectedCategory === cat.id && styles.categoryItemSelected
-            ]}
-            onPress={() => setSelectedCategory(cat.id)}
-          >
-            <cat.icon 
-              size={18} 
-              color={selectedCategory === cat.id ? '#fff' : '#757575'} 
-            />
-            <Text style={[
-              styles.categoryLabel,
-              selectedCategory === cat.id && styles.categoryLabelSelected
-            ]}>
-              {cat.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <FlatList
+          data={CATEGORIES}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.categoryItem,
+                selectedCategory === item.id && styles.categoryItemSelected
+              ]}
+              onPress={() => setSelectedCategory(item.id)}
+            >
+              <item.icon 
+                size={14} 
+                color={selectedCategory === item.id ? '#fff' : '#757575'} 
+              />
+              <Text style={[
+                styles.categoryLabel,
+                selectedCategory === item.id && styles.categoryLabelSelected
+              ]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={styles.categoriesList}
+        />
       </View>
 
       {loading && !refreshing ? (
@@ -122,19 +130,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   categories: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
+  },
+  categoriesList: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 6,
+    borderRadius: 16,
     marginRight: 8,
     backgroundColor: '#F5F5F5',
   },
@@ -142,8 +151,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#2196F3',
   },
   categoryLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: '#757575',
     marginLeft: 6,
   },
