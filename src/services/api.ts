@@ -15,16 +15,29 @@ const yahooApi = axios.create({
 
 // Mapping our symbols to Yahoo Finance symbols
 const STOCK_SYMBOLS: Record<string, { yahoo: string; name: string; type: 'THAI' | 'GLOBAL' }> = {
+  // Thai Stocks (SET100)
   'PTT': { yahoo: 'PTT.BK', name: 'PTT PCL', type: 'THAI' },
   'CPALL': { yahoo: 'CPALL.BK', name: 'CP ALL PCL', type: 'THAI' },
   'AOT': { yahoo: 'AOT.BK', name: 'Airports of Thailand', type: 'THAI' },
   'SCB': { yahoo: 'SCB.BK', name: 'SCB X PCL', type: 'THAI' },
   'KBANK': { yahoo: 'KBANK.BK', name: 'Kasikornbank PCL', type: 'THAI' },
   'ADVANC': { yahoo: 'ADVANC.BK', name: 'Advanced Info Service', type: 'THAI' },
+  'GULF': { yahoo: 'GULF.BK', name: 'Gulf Energy Development', type: 'THAI' },
+  'BDMS': { yahoo: 'BDMS.BK', name: 'Bangkok Dusit Medical', type: 'THAI' },
+  'DELTA': { yahoo: 'DELTA.BK', name: 'Delta Electronics', type: 'THAI' },
+  'BBL': { yahoo: 'BBL.BK', name: 'Bangkok Bank PCL', type: 'THAI' },
+  'KTB': { yahoo: 'KTB.BK', name: 'Krung Thai Bank PCL', type: 'THAI' },
+  'CPN': { yahoo: 'CPN.BK', name: 'Central Pattana PCL', type: 'THAI' },
+  'TRUE': { yahoo: 'TRUE.BK', name: 'True Corporation PCL', type: 'THAI' },
+  'MINT': { yahoo: 'MINT.BK', name: 'Minor International', type: 'THAI' },
+  
+  // Global / NASDAQ
   'AAPL': { yahoo: 'AAPL', name: 'Apple Inc.', type: 'GLOBAL' },
   'TSLA': { yahoo: 'TSLA', name: 'Tesla Inc.', type: 'GLOBAL' },
   'NVDA': { yahoo: 'NVDA', name: 'NVIDIA Corp.', type: 'GLOBAL' },
   'MSFT': { yahoo: 'MSFT', name: 'Microsoft Corp.', type: 'GLOBAL' },
+  'AMZN': { yahoo: 'AMZN', name: 'Amazon.com Inc.', type: 'GLOBAL' },
+  'META': { yahoo: 'META', name: 'Meta Platforms Inc.', type: 'GLOBAL' },
 };
 
 export const fetchLiveStockData = async () => {
