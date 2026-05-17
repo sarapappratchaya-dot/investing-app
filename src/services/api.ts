@@ -12,54 +12,65 @@ const yahooApi = axios.create({
   },
 });
 
-export const fetchLiveMarketData = async (type: 'SET' | 'NASDAQ' | 'GOLD') => {
+// --- API OPTIMIZATION: CACHING SYSTEM ---
+// We store data in memory to avoid redundant calls within the same session.
+const cache: Record<string, { data: any[]; timestamp: number }> = {};
+const CACHE_DURATION = 10 * 60 * 1000; // 10 Minutes (Reduces calls significantly)
+
+export const fetchLiveMarketData = async (type: 'SET' | 'NASDAQ' | 'GOLD', forceRefresh = false) => {
+  const now = Date.now();
+  
+  // 1. Check Cache first
+  if (!forceRefresh && cache[type] && (now - cache[type].timestamp) < CACHE_DURATION) {
+    console.log(`Using cached data for ${type}`);
+    return cache[type].data;
+  }
+
   try {
     let symbols: string[] = [];
     if (type === 'SET') symbols = FULL_SCAN_LIST.THAI;
     else if (type === 'NASDAQ') symbols = FULL_SCAN_LIST.NASDAQ;
     else if (type === 'GOLD') symbols = FULL_SCAN_LIST.GOLD;
     
-    const chunkSize = 10;
-    const chunks = [];
-    for (let i = 0; i < symbols.length; i += chunkSize) {
-      chunks.push(symbols.slice(i, i + chunkSize));
-    }
-
-    // Scan a limited amount to stay within free tier
-    const scanLimit = type === 'GOLD' ? 1 : 3;
-    const scanChunks = chunks.slice(0, scanLimit); 
+    // 2. Optimization: Single call for multiple symbols
+    // We only scan the top 20 symbols of each category to save API points.
+    const symbolsToScan = symbols.slice(0, 20).join(',');
     
-    const results = await Promise.all(scanChunks.map(chunk => 
-      yahooApi.get('/stock/get-price', {
-        params: { symbol: chunk.join(','), region: 'US' }
-      })
-    ));
-
-    const marketData: any[] = [];
-    results.forEach(response => {
-      if (response.data && response.data.body) {
-        response.data.body.forEach((item: any) => {
-          marketData.push({
-            id: item.symbol.toLowerCase().replace('.', '-'),
-            name: item.shortName || item.symbol,
-            symbol: item.symbol.replace('.BK', ''),
-            price: item.regularMarketPrice || 0,
-            change: item.regularMarketChangePercent || 0,
-            volume: item.regularMarketVolume || 0,
-            type: type
-          });
-        });
-      }
+    const response = await yahooApi.get('/stock/get-price', {
+      params: { symbol: symbolsToScan, region: 'US' }
     });
 
+    const marketData: any[] = [];
+    if (response.data && response.data.body) {
+      response.data.body.forEach((item: any) => {
+        marketData.push({
+          id: item.symbol.toLowerCase().replace('.', '-'),
+          name: item.shortName || item.symbol,
+          symbol: item.symbol.replace('.BK', ''),
+          price: item.regularMarketPrice || 0,
+          change: item.regularMarketChangePercent || 0,
+          volume: item.regularMarketVolume || 0,
+          type: type
+        });
+      });
+    }
+
+    // 3. Update Cache
+    cache[type] = { data: marketData, timestamp: now };
     return marketData;
   } catch (error) {
     console.error(`Error scanning ${type} market:`, error);
-    return [];
+    return cache[type]?.data || []; // Return old cache if error
   }
 };
 
-export const fetchCryptoTop50 = async () => {
+// Crypto API is free/unlimited, so no strict cache needed, but good for speed
+export const fetchCryptoTop50 = async (forceRefresh = false) => {
+  const now = Date.now();
+  if (!forceRefresh && cache['CRYPTO'] && (now - cache['CRYPTO'].timestamp) < 5 * 60 * 1000) {
+    return cache['CRYPTO'].data;
+  }
+
   try {
     const response = await axios.get('https://api.coingecko.com/api/v3/coins/markets', {
       params: {
@@ -70,7 +81,7 @@ export const fetchCryptoTop50 = async () => {
         sparkline: false,
       },
     });
-    return response.data.map((item: any) => ({
+    const data = response.data.map((item: any) => ({
       id: item.id,
       name: item.name,
       symbol: item.symbol.toUpperCase(),
@@ -80,8 +91,10 @@ export const fetchCryptoTop50 = async () => {
       type: 'CRYPTO',
       image: item.image,
     }));
+    cache['CRYPTO'] = { data, timestamp: now };
+    return data;
   } catch (error) {
     console.error('Error fetching crypto:', error);
-    return [];
+    return cache['CRYPTO']?.data || [];
   }
 };

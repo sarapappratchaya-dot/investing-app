@@ -22,13 +22,13 @@ export default function Suggestions() {
   const [refreshing, setRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState<SortType>('SCORE');
 
-  const loadData = async () => {
+  const loadData = async (force = false) => {
     setLoading(true);
     try {
-      const setStocks = await fetchLiveMarketData('SET');
-      const nasdaqStocks = await fetchLiveMarketData('NASDAQ');
-      const gold = await fetchLiveMarketData('GOLD');
-      const crypto = await fetchCryptoTop50();
+      const setStocks = await fetchLiveMarketData('SET', force);
+      const nasdaqStocks = await fetchLiveMarketData('NASDAQ', force);
+      const gold = await fetchLiveMarketData('GOLD', force);
+      const crypto = await fetchCryptoTop50(force);
       
       const allAssets = [...setStocks, ...nasdaqStocks, ...gold, ...crypto];
       const tradeSuggestions = getTopSuggestions(allAssets);
@@ -41,12 +41,12 @@ export default function Suggestions() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await loadData(true); // Force API call only on pull-to-refresh
     setRefreshing(false);
   };
 
   useEffect(() => {
-    loadData();
+    loadData(); // Uses cache automatically
   }, []);
 
   const filteredSuggestions = selectedCategory === 'ALL' 
@@ -141,7 +141,7 @@ export default function Suggestions() {
             <View style={styles.banner}>
               <Info size={16} color="#0288D1" />
               <Text style={styles.bannerText}>
-                Top setups for {selectedCategory === 'ALL' ? 'all markets' : selectedCategory} based on 15m/1H logic.
+                Data is cached for 10 min to save API points. Pull down to refresh live.
               </Text>
             </View>
           }
