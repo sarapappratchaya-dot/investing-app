@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { PriceCard } from '../components/PriceCard';
-import { fetchCryptoTop50, fetchLiveMarketData } from '../services/api';
+import { fetchCryptoTop50, fetchSETData, fetchNASDAQData, fetchGoldData } from '../services/api';
 import { Wallet, TrendingUp, Globe, Coins, Zap } from 'lucide-react-native';
 
 const CATEGORIES = [
@@ -18,14 +18,16 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (force = false) => {
     setLoading(true);
     try {
-      const setStocks = await fetchLiveMarketData('SET');
-      const nasdaqStocks = await fetchLiveMarketData('NASDAQ');
-      const gold = await fetchLiveMarketData('GOLD');
-      const crypto = await fetchCryptoTop50();
-      setData([...setStocks, ...nasdaqStocks, ...gold, ...crypto]);
+      const [setStocks, nasdaqStocks, goldData, crypto] = await Promise.all([
+        fetchSETData(force),
+        fetchNASDAQData(force),
+        fetchGoldData(force),
+        fetchCryptoTop50(force)
+      ]);
+      setData([...setStocks, ...nasdaqStocks, ...goldData, ...crypto]);
     } catch (error) {
       console.error('Dashboard loading error:', error);
     }
@@ -34,7 +36,7 @@ export default function Dashboard() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await loadData(true);
     setRefreshing(false);
   };
 
@@ -50,7 +52,7 @@ export default function Dashboard() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Investing</Text>
-        <Text style={styles.subtitle}>Market Overview</Text>
+        <Text style={styles.subtitle}>SET (Yahoo Fin) • NASDAQ (Finnhub)</Text>
       </View>
 
       <View style={styles.categories}>

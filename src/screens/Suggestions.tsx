@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { TradeCard } from '../components/TradeCard';
-import { fetchCryptoTop50, fetchLiveMarketData } from '../services/api';
+import { fetchCryptoTop50, fetchSETData, fetchNASDAQData, fetchGoldData } from '../services/api';
 import { getTopSuggestions, TradeSuggestion } from '../utils/tradingLogic';
 import { Zap, ArrowUpDown, Percent, Info, Wallet, TrendingUp, Globe, Coins } from 'lucide-react-native';
 
@@ -25,10 +25,12 @@ export default function Suggestions() {
   const loadData = async (force = false) => {
     setLoading(true);
     try {
-      const setStocks = await fetchLiveMarketData('SET', force);
-      const nasdaqStocks = await fetchLiveMarketData('NASDAQ', force);
-      const gold = await fetchLiveMarketData('GOLD', force);
-      const crypto = await fetchCryptoTop50(force);
+      const [setStocks, nasdaqStocks, gold, crypto] = await Promise.all([
+        fetchSETData(force),
+        fetchNASDAQData(force),
+        fetchGoldData(force),
+        fetchCryptoTop50(force)
+      ]);
       
       const allAssets = [...setStocks, ...nasdaqStocks, ...gold, ...crypto];
       const tradeSuggestions = getTopSuggestions(allAssets);
@@ -41,12 +43,12 @@ export default function Suggestions() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData(true); // Force API call only on pull-to-refresh
+    await loadData(true);
     setRefreshing(false);
   };
 
   useEffect(() => {
-    loadData(); // Uses cache automatically
+    loadData();
   }, []);
 
   const filteredSuggestions = selectedCategory === 'ALL' 
@@ -67,7 +69,7 @@ export default function Suggestions() {
           <Text style={styles.title}>Day Trade Scanner</Text>
           <Zap size={24} color="#FFD600" fill="#FFD600" />
         </View>
-        <Text style={styles.subtitle}>Scanning SET, NASDAQ, Crypto & Gold</Text>
+        <Text style={styles.subtitle}>SET (Yahoo) • NASDAQ (Finnhub)</Text>
       </View>
 
       <View style={styles.categories}>
@@ -141,7 +143,7 @@ export default function Suggestions() {
             <View style={styles.banner}>
               <Info size={16} color="#0288D1" />
               <Text style={styles.bannerText}>
-                Data is cached for 10 min to save API points. Pull down to refresh live.
+                Top setups for {selectedCategory === 'ALL' ? 'all markets' : selectedCategory} based on 15m/1H logic.
               </Text>
             </View>
           }
